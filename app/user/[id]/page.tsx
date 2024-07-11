@@ -87,16 +87,6 @@ const VerifyUserPage = ({ params: { id } }: props) => {
 
   return (
     <div>
-      <StyledRating
-        name="customized-color"
-        defaultValue={2}
-        getLabelText={(value: number) =>
-          `${value} Heart${value !== 1 ? "s" : ""}`
-        }
-        precision={0.5}
-        icon={<FavoriteIcon fontSize="inherit" />}
-        emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
-      />
       {songs.map((song) => (
         <div key={song.trackid}>
           <Spotify
@@ -108,8 +98,17 @@ const VerifyUserPage = ({ params: { id } }: props) => {
             style={{ borderRadius: "14px" }}
             className="card-title"
           />
-          <h3 className="card-body h-auto w-mx">{song.trackname}</h3>
-          <p className="card-actions">{song.trackArtist}</p>
+          <StyledRating
+            name="customized-color"
+            defaultValue={2}
+            getLabelText={(value: number) =>
+              `${value} Heart${value !== 1 ? "s" : ""}`
+            }
+            size="large"
+            precision={0.5}
+            icon={<FavoriteIcon fontSize="inherit" />}
+            emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+          />
         </div>
       ))}
     </div>
