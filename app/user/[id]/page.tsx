@@ -23,9 +23,11 @@ interface Songs {
 const StyledRating = styled(Rating)({
   "& .MuiRating-iconFilled": {
     color: "#ff6d75",
+    fontsize: "4rem",
   },
   "& .MuiRating-iconHover": {
     color: "#ff3d47",
+    fontsize: "4rem",
   },
 });
 
@@ -86,31 +88,45 @@ const VerifyUserPage = ({ params: { id } }: props) => {
   }, [accessToken]);
 
   return (
-    <div>
-      {songs.map((song) => (
-        <div key={song.trackid}>
-          <Spotify
-            link={"https://open.spotify.com/track/" + song.trackid}
-            height="152"
-            width="100%"
-            frameBorder="1"
-            theme="0"
-            style={{ borderRadius: "14px" }}
-            className="card-title"
-          />
-          <StyledRating
-            name="customized-color"
-            defaultValue={2}
-            getLabelText={(value: number) =>
-              `${value} Heart${value !== 1 ? "s" : ""}`
-            }
-            size="large"
-            precision={0.5}
-            icon={<FavoriteIcon fontSize="inherit" />}
-            emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
-          />
-        </div>
-      ))}
+    <div className="p-2">
+      <div className="text-4xl m-4 font-franie text-green-600 text-center">
+        <h1>
+          Rate the songs according to
+          <span className="text-amber-300"> Ahtisham's </span>
+          preference{" "}
+        </h1>{" "}
+      </div>
+      <div className="flex flex-col md:flex-row gap-7 justify-center items-center flex-wrap max-w-[75rem] my-7 mx-auto">
+        {songs.map((song) => (
+          <div key={song.trackid}>
+            <Spotify
+              link={"https://open.spotify.com/track/" + song.trackid}
+              height="352"
+              width="100%"
+              frameBorder="1"
+              theme="0"
+              style={{ borderRadius: "14px" }}
+              className="card-title"
+            />
+            <div className=" py-4 flex justify-center items-start ">
+              <StyledRating
+                name="customized-color"
+                defaultValue={2}
+                getLabelText={(value: number) =>
+                  `${value} Heart${value !== 1 ? "s" : ""}`
+                }
+                size="large"
+                precision={1}
+                icon={<FavoriteIcon fontSize="inherit" />}
+                emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-center items-start mb-10">
+        <button className="btn btn-outline btn-success w-[7rem]">Done</button>
+      </div>
     </div>
   );
 };
