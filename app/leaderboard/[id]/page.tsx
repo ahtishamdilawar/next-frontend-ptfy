@@ -124,9 +124,7 @@ interface Leaderboard {
 
 const getLeaderboard = async (id: string): Promise<Leaderboard[]> => {
   try {
-    const response = await axios.get(
-      `http://localhost:3000/leaderboard/6685328cc0feb149f3043fa1`
-    );
+    const response = await axios.get(`http://localhost:3000/leaderboard/${id}`);
     return response.data;
   } catch (error) {
     console.error(error);
@@ -139,6 +137,9 @@ const LeaderboardPage = ({ params: { id } }: props) => {
 
   useEffect(() => {
     getLeaderboard(id).then((data) => {
+      if (data.length === 0) {
+        alert("No data found");
+      }
       setLeads(data);
       console.log(data);
     });
@@ -149,7 +150,7 @@ const LeaderboardPage = ({ params: { id } }: props) => {
       <div className="text-4xl m-4 font-franie text-green-600 text-center">
         <h1>Leaderboard</h1>
       </div>
-      <div className="flex flex-col md:flex-row gap-7 justify-center items-center flex-wrap max-w-[75rem] my-7 mx-auto">
+      <div className="flex flex-col md:flex-row gap-7 justify-center items-center flex-wrap max-w-[150rem] my-7 mx-auto">
         <div className="overflow-x-auto">
           <table className="table">
             <thead>
