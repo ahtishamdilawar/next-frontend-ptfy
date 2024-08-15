@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { Spotify } from "react-spotify-embed";
 import Rating from "@mui/material/Rating";
@@ -19,6 +19,12 @@ interface Songs {
   trackname: string;
   trackArtist: string;
 }
+interface rate {
+  songId: string;
+  rating: number;
+}
+
+// const [rates, setRates] = React.useState<rate[]>([]);
 
 const StyledRating = styled(Rating)({
   "& .MuiRating-iconFilled": {
@@ -72,7 +78,7 @@ const VerifyUserPage = ({ params: { id } }: props) => {
     accessToken: "",
   });
   const [songs, setSongs] = React.useState<Songs[]>([]);
-
+  const [rates, setRates] = useState<rate[]>([]);
   React.useEffect(() => {
     getAccessToken(id).then((data) => {
       setAccessToken(data);
@@ -86,13 +92,52 @@ const VerifyUserPage = ({ params: { id } }: props) => {
       });
     }
   }, [accessToken]);
+  //set the rating of the song in the rates array
+  const setRating = (songId: string, rating: number) => {
+    const index = rates.findIndex((rate) => rate.songId === songId);
+    if (index === -1) {
+      setRates([...rates, { songId, rating }]);
+    } else {
+      const newRates = [...rates];
+      newRates[index].rating = rating;
+      setRates(newRates);
+    }
+  };
+  const doneHandler = async () => {
+    const songs = rates;
+    //check if all songs are rated
+    if (songs.length !== 5) {
+      alert("Please rate all songs");
+      return;
+    }
+    try {
+      const data = {
+        spotifyId: id,
+        songs,
+      };
+      const config = {
+        headers: { Authorization: `Bearer ${accessToken.accessToken}` },
+      };
+
+      const resp = await axios.post(
+        "http://localhost:3000/songs/rate",
+        data,
+        config
+      );
+
+      console.log("Ratings posted successfully", resp);
+      alert("Ratings posted successfully");
+    } catch (error) {
+      console.error("Error posting ratings:", error);
+    }
+  };
 
   return (
     <div className="p-2">
       <div className="text-4xl m-4 font-franie text-green-600 text-center">
         <h1>
           Rate the songs according to
-          <span className="text-amber-300"> Ahtisham's </span>
+          <span className="text-amber-300"> your </span>
           preference{" "}
         </h1>{" "}
       </div>
@@ -111,7 +156,7 @@ const VerifyUserPage = ({ params: { id } }: props) => {
             <div className=" py-4 flex justify-center items-start ">
               <StyledRating
                 name="customized-color"
-                defaultValue={2}
+                defaultValue={-1}
                 getLabelText={(value: number) =>
                   `${value} Heart${value !== 1 ? "s" : ""}`
                 }
@@ -119,13 +164,23 @@ const VerifyUserPage = ({ params: { id } }: props) => {
                 precision={1}
                 icon={<FavoriteIcon fontSize="inherit" />}
                 emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+                onChange={(event, newValue) => {
+                  if (newValue !== null) {
+                    setRating(song.trackid, newValue);
+                  }
+                }}
               />
             </div>
           </div>
         ))}
       </div>
       <div className="flex justify-center items-start mb-10">
-        <button className="btn btn-outline btn-success w-[7rem]">Done</button>
+        <button
+          className="btn btn-outline btn-success w-[7rem]"
+          onClick={doneHandler}
+        >
+          Done
+        </button>
       </div>
     </div>
   );
