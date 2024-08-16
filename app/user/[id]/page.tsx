@@ -6,6 +6,9 @@ import Rating from "@mui/material/Rating";
 import { styled } from "@mui/system";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { useRouter } from "next/navigation"; // Import the useRouter hook
+const domain = "http://localhost:3000";
 interface props {
   params: { id: string };
 }
@@ -38,9 +41,7 @@ const StyledRating = styled(Rating)({
 });
 
 const getAccessToken = async (id: string) => {
-  const { data } = await axios.get(
-    `http://localhost:3000/auth/accessToken/${id}`
-  );
+  const { data } = await axios.get(`${domain}/auth/accessToken/${id}`);
   console.log(data);
   return data;
 };
@@ -57,13 +58,9 @@ const getRandomSongs = async (
     const body1 = {
       spotifyId: id,
     };
-    const response = await axios.post(
-      "http://localhost:3000/songs/random",
-      body1,
-      {
-        headers,
-      }
-    );
+    const response = await axios.post("${domain}/songs/random", body1, {
+      headers,
+    });
     song1[0] = response.data[0];
 
     return response.data;
@@ -77,8 +74,12 @@ const VerifyUserPage = ({ params: { id } }: props) => {
   const [accessToken, setAccessToken] = React.useState<Token>({
     accessToken: "",
   });
+  const modalRef = React.useRef<HTMLDialogElement>(null);
   const [songs, setSongs] = React.useState<Songs[]>([]);
   const [rates, setRates] = useState<rate[]>([]);
+  const [sessionId, setSessionId] = useState<string>("");
+  const [link, setLink] = useState<string>("");
+  const Router = useRouter();
   React.useEffect(() => {
     getAccessToken(id).then((data) => {
       setAccessToken(data);
@@ -119,19 +120,26 @@ const VerifyUserPage = ({ params: { id } }: props) => {
         headers: { Authorization: `Bearer ${accessToken.accessToken}` },
       };
 
-      const resp = await axios.post(
-        "http://localhost:3000/songs/rate",
-        data,
-        config
-      );
+      const resp = await axios.post("${domain}/songs/rate", data, config);
+      console.log(resp);
+      setSessionId(resp.data.sessionId);
+      const shareableLink = `${window.location.origin}/guess/${resp.data.sessionId}`;
+      setLink(shareableLink);
 
       console.log("Ratings posted successfully", resp);
       alert("Ratings posted successfully");
+      modalRef.current?.showModal();
     } catch (error) {
       console.error("Error posting ratings:", error);
     }
   };
-
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(link);
+    alert("Link copied to clipboard!");
+  };
+  const closeBtnHandler = () => {
+    Router.push(`/leaderboard/${sessionId}`);
+  };
   return (
     <div className="p-2">
       <div className="text-4xl m-4 font-franie text-green-600 text-center">
@@ -182,6 +190,34 @@ const VerifyUserPage = ({ params: { id } }: props) => {
           Done
         </button>
       </div>
+      <dialog ref={modalRef} className="modal sm:modal-middle">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">
+            You have successfully rated the songs!!
+          </h3>
+          <pre className="py-4">here is a shareable link</pre>
+          <div className="flex items-center gap-4 text-white ">
+            <input
+              type="text"
+              value={link}
+              readOnly
+              className="input input-bordered w-full max-w-xs px-2 py-1 rounded"
+            />
+
+            <a onClick={copyToClipboard} className="btn">
+              <ContentCopyIcon />
+            </a>
+          </div>
+          <div className="modal-action">
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn" onClick={closeBtnHandler}>
+                Close
+              </button>
+            </form>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 };

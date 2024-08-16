@@ -6,6 +6,9 @@ import Rating from "@mui/material/Rating";
 import { styled } from "@mui/system";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import { useRouter } from "next/navigation"; // Import the useRouter hook
+import { Session } from "inspector";
+const domain = "http://localhost:3000";
 interface props {
   params: { id: string };
 }
@@ -13,17 +16,20 @@ interface props {
 interface Token {
   accessToken: string;
 }
-
-interface Songs {
-  trackid: string;
-  trackname: string;
-  trackArtist: string;
+interface RatingSession {
+  sessionid: string;
+  name: string;
+  songs: string[]; //yehi kehra hun khapna prhrha sessionId kese layen kiunke redirect kliye id chiye wo idhr tou hardcode kiya mene
 }
+
 interface rate {
   songId: string;
   rating: number;
 }
-
+interface Guess {
+  guesserName: string;
+  guesses: { songId: string; guess: number }[];
+}
 // const [rates, setRates] = React.useState<rate[]>([]);
 
 const StyledRating = styled(Rating)({
@@ -37,101 +43,91 @@ const StyledRating = styled(Rating)({
   },
 });
 
-const getAccessToken = async (id: string) => {
-  const { data } = await axios.get(
-    `http://localhost:3000/auth/accessToken/${id}`
-  );
-  console.log(data);
-  return data;
-};
-
-const getRating = async (id: string): Promise<Songs[]> => {
-  try {
-    let song1: Songs[] = [];
-
-    const response = await axios.post(`http://localhost:3000/share/${id}`);
-    song1[0] = response.data[0];
-
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-};
-
 const guessPage = ({ params: { id } }: props) => {
-  const [accessToken, setAccessToken] = React.useState<Token>({
-    accessToken: "",
+  const [name, setName] = React.useState<string>("");
+  const [ownerName, setOwnerName] = React.useState<string>("");
+  const [guesses, setGuesses] = useState<Guess>({
+    guesserName: "",
+    guesses: [],
   });
-  const [songs, setSongs] = React.useState<Songs[]>([]);
+  const Router = useRouter();
+  const modalRef = React.useRef<HTMLDialogElement>(null);
   const [rates, setRates] = useState<rate[]>([]);
-  React.useEffect(() => {
-    getAccessToken(id).then((data) => {
-      setAccessToken(data);
+  const [accuracyScore, setAccuracyScore] = useState<number>(0);
+  const [ratingSession, setRatingSession] = React.useState<RatingSession>();
+  const setGuessesHandler = (songId: string, rating: number) => {
+    const newGuesses = guesses.guesses.filter(
+      (guess) => guess.songId !== songId
+    );
+    newGuesses.push({ songId, guess: rating });
+    setGuesses({
+      guesserName: name,
+      guesses: newGuesses,
     });
-  }, []);
-
-  React.useEffect(() => {
-    if (accessToken.accessToken) {
-      getRating(id).then((data) => {
-        setSongs(data);
-      });
-    }
-  }, [accessToken]);
-  //set the rating of the song in the rates array
-  const setRating = (songId: string, rating: number) => {
-    const index = rates.findIndex((rate) => rate.songId === songId);
-    if (index === -1) {
-      setRates([...rates, { songId, rating }]);
-    } else {
-      const newRates = [...rates];
-      newRates[index].rating = rating;
-      setRates(newRates);
+  };
+  const getRating = async (id: string): Promise<RatingSession | null> => {
+    try {
+      const response = await axios.get(`${domain}/share/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      return null;
     }
   };
+  React.useEffect(() => {
+    getRating(id).then((session) => {
+      if (session) {
+        setRatingSession(session);
+      }
+    });
+  }, [id]);
+
   const doneHandler = async () => {
-    const songs = rates;
-    //check if all songs are rated
-    if (songs.length !== 5) {
-      alert("Please rate all songs");
-      return;
+    if (guesses.guesses.length !== 5) {
+      console.log("Please guess all songs");
+      alert("Please guess all songs.");
+    }
+    if (name === "") {
+      alert("Please enter your name");
     }
     try {
-      const data = {
-        spotifyId: id,
-        songs,
-      };
-      const config = {
-        headers: { Authorization: `Bearer ${accessToken.accessToken}` },
-      };
-
-      const resp = await axios.post(
-        "http://localhost:3000/songs/rate",
-        data,
-        config
-      );
-
-      console.log("Ratings posted successfully", resp);
+      const resp = await axios.post(`${domain}/share/${id}/guess`, guesses);
+      setAccuracyScore(resp.data.accuracyScore);
+      console.log("Ratings guessed successfully", resp);
       alert("Ratings guessed successfully");
+      modalRef.current?.showModal();
     } catch (error) {
-      console.error("Error posting ratings:", error);
+      console.error("Error posting guess:", error);
     }
+  };
+  const closeBtnHandler = () => {
+    Router.push(`/leaderboard/${id}`);
   };
 
   return (
     <div className="p-2">
       <div className="text-4xl m-4 font-franie text-green-600 text-center">
         <h1>
-          Rate the songs according to
-          <span className="text-amber-300"> your </span>
-          preference{" "}
+          Guess how much{" "}
+          <span className="text-amber-300"> {ratingSession?.name} </span>
+          rated these songs{" "}
         </h1>{" "}
+        <div className="join my-[5rem]">
+          <input
+            className="namebox input input-bordered join-item"
+            placeholder="Name"
+            onChange={(e) => setName(e.target.value)}
+          />
+          {/* <button className="btn join-item rounded-r-full font-sans">
+            Enter
+          </button> */}
+        </div>
       </div>
       <div className="flex flex-col md:flex-row gap-7 justify-center items-center flex-wrap max-w-[75rem] my-7 mx-auto">
-        {songs.map((song) => (
-          <div key={song.trackid}>
+        {ratingSession?.songs.map((songId) => (
+          <div key={songId}>
             <Spotify
-              link={"https://open.spotify.com/track/" + song.trackid}
+              link={"https://open.spotify.com/track/" + songId}
               height="352"
               width="100%"
               frameBorder="1"
@@ -152,7 +148,7 @@ const guessPage = ({ params: { id } }: props) => {
                 emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
                 onChange={(event, newValue) => {
                   if (newValue !== null) {
-                    setRating(song.trackid, newValue);
+                    setGuessesHandler(songId, newValue);
                   }
                 }}
               />
@@ -168,6 +164,22 @@ const guessPage = ({ params: { id } }: props) => {
           Done
         </button>
       </div>
+      <dialog ref={modalRef} className="modal sm:modal-middle">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg flex items-center justify-center">
+            Your score is {accuracyScore} / 50
+          </h3>
+
+          <div className="modal-action flex items-center justify-center">
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn" onClick={closeBtnHandler}>
+                Check Leaderboard
+              </button>
+            </form>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 };
