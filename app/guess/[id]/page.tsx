@@ -8,7 +8,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { useRouter } from "next/navigation"; // Import the useRouter hook
 import { Session } from "inspector";
-const domain = "http://localhost:3000";
+const domain = "https://3.7.248.219";
 interface props {
   params: { id: string };
 }
@@ -43,7 +43,7 @@ const StyledRating = styled(Rating)({
   },
 });
 
-const guessPage = ({ params: { id } }: props) => {
+const GuessPage = ({ params: { id } }: props) => {
   const [name, setName] = React.useState<string>("");
   const [ownerName, setOwnerName] = React.useState<string>("");
   const [guesses, setGuesses] = useState<Guess>({
@@ -94,7 +94,7 @@ const guessPage = ({ params: { id } }: props) => {
       const resp = await axios.post(`${domain}/share/${id}/guess`, guesses);
       setAccuracyScore(resp.data.accuracyScore);
       console.log("Ratings guessed successfully", resp);
-      alert("Ratings guessed successfully");
+
       modalRef.current?.showModal();
     } catch (error) {
       console.error("Error posting guess:", error);
@@ -184,4 +184,4 @@ const guessPage = ({ params: { id } }: props) => {
   );
 };
 
-export default guessPage;
+export default GuessPage;

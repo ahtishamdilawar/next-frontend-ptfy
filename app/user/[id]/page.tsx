@@ -8,7 +8,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useRouter } from "next/navigation"; // Import the useRouter hook
-const domain = "http://localhost:3000";
+const domain = "https://3.7.248.219";
 interface props {
   params: { id: string };
 }
@@ -127,7 +127,7 @@ const VerifyUserPage = ({ params: { id } }: props) => {
       setLink(shareableLink);
 
       console.log("Ratings posted successfully", resp);
-      alert("Ratings posted successfully");
+
       modalRef.current?.showModal();
     } catch (error) {
       console.error("Error posting ratings:", error);

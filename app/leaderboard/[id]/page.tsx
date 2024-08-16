@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-const domain = "http://localhost:3000";
+const domain = "https://3.7.248.219";
 
 interface props {
   params: { id: string };
@@ -33,9 +33,6 @@ const LeaderboardPage = ({ params: { id } }: props) => {
 
   useEffect(() => {
     getLeaderboard(id).then((data) => {
-      if (data.length === 0) {
-        alert("No data found");
-      }
       setLeads(data);
       console.log(data);
     });
