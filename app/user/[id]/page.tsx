@@ -58,7 +58,7 @@ const getRandomSongs = async (
     const body1 = {
       spotifyId: id,
     };
-    const response = await axios.post("${domain}/songs/random", body1, {
+    const response = await axios.post(`${domain}/songs/random`, body1, {
       headers,
     });
     song1[0] = response.data[0];
@@ -120,7 +120,7 @@ const VerifyUserPage = ({ params: { id } }: props) => {
         headers: { Authorization: `Bearer ${accessToken.accessToken}` },
       };
 
-      const resp = await axios.post("${domain}/songs/rate", data, config);
+      const resp = await axios.post(`${domain}/songs/rate`, data, config);
       console.log(resp);
       setSessionId(resp.data.sessionId);
       const shareableLink = `${window.location.origin}/guess/${resp.data.sessionId}`;
